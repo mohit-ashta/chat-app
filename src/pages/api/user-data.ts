@@ -6,13 +6,11 @@ import Layout from "@/components/organisms/layout";
 // Define the user interface
 interface User {
   id: string;
-  title: string;
-  subtitle: string;
   // Add other properties as needed
 }
 
 const getData = async () => {
-  const usersRef = ref(database, "user");
+  const usersRef = ref(database, "room1/message")
 
   try {
     const snapshot = await get(usersRef);

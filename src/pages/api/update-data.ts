@@ -8,7 +8,7 @@ interface User {
   subtitle: string;
   // Add other properties as needed
 }
-
+// for update 
 const addNewUser = async (newUserData: User) => {
   const usersRef = ref(database, 'user');
   const newUserRef = push(usersRef);

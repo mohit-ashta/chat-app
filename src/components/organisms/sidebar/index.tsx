@@ -1,32 +1,36 @@
-import { SidebarMenu } from "@/components/atoms/menu-lists";
-import { SidebarChatList } from "@/constants/data";
-
-import { useRouter } from "next/router";
-
+import { useGetUsers } from "@/pages/api/user-data";
+import React from "react";
 import TopFilter from "../filter-list";
+import Link from "next/link";
 
-export const Sidebar = () => {
-  const router = useRouter();
+export const SidebarList = () => {
+  const { data: users, isLoading, isError } = useGetUsers();
+
+  if (isLoading) {
+    return <p>Loading...</p>;
+  }
+
+  if (isError || users === undefined) {
+    return <p>Error loading data</p>;
+  }
+  console.log(users, "33");
+
   return (
-    <div className="bg-BgColor w-[300px] border border-dashded border-r-[#353535] shadow-[#ffffff] lg:flex flex-col gap-2 ">
+    <div className="bg-BgColor w-[300px] border border-dashded border-r-[#353535] shadow-[#ffffff] lg:flex flex-col gap-2">
       <TopFilter />
-      <ul>
-        {SidebarChatList.map((item, idx) => {
-          return (
-            <li key={idx}>
-              <SidebarMenu
-                key={idx}
-                title={item.title}
-                link={item.link}
-                icon={item.icon}
-                className={`text-black hover:bg-greyish hover:text-black   ${
-                  router.pathname == item.link ? "text-black bg-greyish" : ""
-                }`}
-              />
-            </li>
-          );
-        })}
-      </ul>
+      <div>
+        <h2>User List</h2>
+        {users.length > 0 ? (
+          <ul>
+            {users.map((user) => (
+                <Link href={`dashboard/${user.id}`} key={user.id}>
+              <li >{user.id}</li></Link>
+            ))}
+          </ul>
+        ) : (
+          <p>No users found.</p>
+        )}
+      </div>
     </div>
   );
 };

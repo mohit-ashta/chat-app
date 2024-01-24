@@ -20,7 +20,7 @@ const TopFilter = () => {
       <input
         type="search"
         className="bg-transparent px-2 focus:outline-none"
-        placeholder="search conatct /chat"
+        placeholder="search contact /chat"
       />
     </div>
   </div>
