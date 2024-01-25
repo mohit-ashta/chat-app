@@ -7,17 +7,20 @@ interface Message {
   senderId: string;
   name: string;
   timestamp: number;
-  messages:string
+  messages: string;
 }
 
-// message send 
+// message send
 export const sendMessageMutation = async (
   userId: string,
   senderId: string,
   name: string,
-  messages:string
+  messages: string
 ): Promise<void> => {
-  const messagesRef = ref(database, `room1/message/${userId}/${senderId}`);
+  const messagesRef = ref(
+    database,
+    `room1/message/${userId}/${name}/${senderId}`
+  );
   const message: Message = {
     userId,
     senderId,
