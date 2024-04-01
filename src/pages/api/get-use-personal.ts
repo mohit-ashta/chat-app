@@ -17,8 +17,10 @@ interface FilteredChatProps extends ChatInboxProps {
   isIncoming: boolean;
 }
 
-const PersonalInbox = async (currentUserId: string): Promise<FilteredChatProps[]> => {
-  const usersRef = ref(database, `room1/message`);
+const PersonalInbox = async (
+  currentUserId: string
+): Promise<FilteredChatProps[]> => {
+  const usersRef = ref(database, `room1/messages`);
   const snapshot = await get(usersRef);
   const data = snapshot.val();
 
@@ -29,7 +31,6 @@ const PersonalInbox = async (currentUserId: string): Promise<FilteredChatProps[]
 
   // Convert the data object to an array of User objects
   const PersonalChat: ChatInboxProps[] = Object.values(data);
-console.log(PersonalChat,"PersonalChat");
 
   // Filter the PersonalChat array to return only the messages that are sent by or received by the current user
   const FilteredChat: FilteredChatProps[] = PersonalChat.map((chat) => {
@@ -45,5 +46,8 @@ console.log(PersonalChat,"PersonalChat");
 };
 
 export const usePersonalInbox = (currentUserId: string) => {
-  return useQuery<FilteredChatProps[], Error>(["personalInbox", currentUserId], () => PersonalInbox(currentUserId));
+  return useQuery<FilteredChatProps[], Error>(
+    ["personalInbox", currentUserId],
+    () => PersonalInbox(currentUserId)
+  );
 };

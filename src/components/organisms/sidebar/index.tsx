@@ -1,34 +1,52 @@
 import { useGetUsers } from "@/pages/api/user-data";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import TopFilter from "../filter-list";
 import Link from "next/link";
+import { useAuth, useUser } from "@clerk/nextjs";
 
 export const SidebarList = () => {
-  const { data: users, isLoading, isError } = useGetUsers();
+  const { data: usersData, isLoading, isError } = useGetUsers();
+  const { isLoaded, userId, getToken } = useAuth();
 
   if (isLoading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="bg-BgColor w-[300px] border  border-[#353535] shadow-[#ffffff]">
+        <p>Loading...</p>{" "}
+      </div>
+    );
+  }
+  if (!isLoaded || !userId) {
+    return null;
   }
 
-  if (isError || users === undefined) {
+  if (isError || usersData === undefined) {
     return <p>Error loading data</p>;
   }
-  console.log(users, "33");
+  const filteredUsersData = usersData.filter((user: any) => {
+    return Object.keys(user.userId)[0] !== userId;
+  });
 
   return (
     <div className="bg-BgColor w-[300px] border border-dashded border-r-[#353535] shadow-[#ffffff] lg:flex flex-col gap-2">
       <TopFilter />
       <div>
-        <h2>User List</h2>
-        {users.length > 0 ? (
+        {filteredUsersData.length > 0 ? (
           <ul>
-            {users.map((user) => (
-                <Link href={`dashboard/${user.id}`} key={user.id}>
-              <li >{user.id}</li></Link>
-            ))}
+            {filteredUsersData.map((user: any, idx) => {
+              return (
+                <Link
+                  href={`dashboard/${Object.keys(user.userId)[0]}`}
+                  key={idx}
+                >
+                  <h2 className="text-black py-2 mb-1 pl-4 bg-greyish text-black uppercase">
+                    {user.receiverName}
+                  </h2>
+                </Link>
+              );
+            })}
           </ul>
         ) : (
-          <p>No users found.</p>
+          <p>No other users found.</p>
         )}
       </div>
     </div>
