@@ -1,4 +1,3 @@
-"use client";
 import { useEffect, useState } from "react";
 import { RiSendPlaneFill } from "react-icons/ri";
 import { useUser } from "@clerk/clerk-react";
@@ -7,6 +6,8 @@ import { useRouter } from "next/router";
 
 import { sendMessageMutation } from "@/pages/api/send-message";
 import { usePersonalInbox } from "../api/get-use-personal";
+import { onValue, ref, off, push } from "firebase/database";
+import { database } from "@/firebaseConfig";
 
 const PersonalInboxChat = () => {
   const router = useRouter();
@@ -14,21 +15,16 @@ const PersonalInboxChat = () => {
 
   const { data: personalInbox, isLoading, isError } = usePersonalInbox("");
 
-  // all state
-  const [newMessage, setNewMessage] = useState("");
   const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState<string>("");
 
-  // mutations
   const { isLoaded, isSignedIn, user } = useUser();
 
-  // check token
   let jwtToken: any;
   if (typeof window !== "undefined") {
     jwtToken = localStorage.getItem("clerk-db-jwt");
-  } else {
-    console.log("Cannot access localStorage on the server side.");
   }
-  // user variables
+
   const currentId = user?.id || "";
   const userEmail = user?.emailAddresses?.[0]?.emailAddress || "";
   const userName = user?.username || "";
@@ -38,6 +34,40 @@ const PersonalInboxChat = () => {
     email: userEmail,
   };
 
+  useEffect(() => {
+    if (currentId) {
+      const userID = clerkUserData.currid;
+      const CurName = clerkUserData.name;
+      const allUsersMessagesRef = ref(
+        database,
+        `room1/messages${userID}/${CurName}`
+      );
+      const allUsersUnsubscribe = onValue(allUsersMessagesRef, (snapshot) => {
+        snapshot.forEach((userSnapshot) => {
+          const userId = userSnapshot.key;
+          userSnapshot.forEach((messageSnapshot) => {
+            const messageData = messageSnapshot.val();
+            if (userId !== clerkUserData.currid) {
+              const newMessage = {
+                id: messageSnapshot.key,
+                userId: userId,
+                userName: messageData.senderName,
+                userEmail: "",
+                content: messageData.content,
+                timestamp: messageData.timestamp,
+              };
+              setMessages((prevMessages) => [...prevMessages, newMessage]);
+            }
+          });
+        });
+      });
+
+      return () => {
+        allUsersUnsubscribe();
+      };
+    }
+  }, [currentId]);
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -46,18 +76,22 @@ const PersonalInboxChat = () => {
     return <div>Error loading data</div>;
   }
 
-  // send messages
   const handleSendMessage = (e: any) => {
     e.preventDefault();
     if (newMessage.trim() !== "") {
       const targetUserId: any = user_id || "";
 
-      sendMessageMutation(targetUserId, clerkUserData.currid, clerkUserData.name,newMessage);
+      sendMessageMutation(
+        targetUserId,
+        clerkUserData.currid,
+        clerkUserData.name,
+        newMessage
+      );
       setNewMessage("");
     }
   };
+
   const inboxMessages = personalInbox || [];
-  console.log(inboxMessages, "i get data");
 
   return (
     <Layout>
@@ -66,15 +100,55 @@ const PersonalInboxChat = () => {
 
         <div>
           {inboxMessages.length > 0 && (
-            <div className="bg-red-300">
-              Messages:
-              {inboxMessages.map((message) => (
-                <div key={message.userId}>
-                  {message.senderName}: {message.content}
-                  <div>time {message.isIncoming}</div>
-                </div>
-              ))}
-            </div>
+            <>
+              {inboxMessages
+                .sort((a, b) => a.timestamp - b.timestamp)
+                .map((message) => {
+                  const isCurrentUser = message.userId === currentId;
+                  const isTokenMatch = jwtToken && message.userId === currentId;
+
+                  const messagePositionClass = isCurrentUser
+                    ? "text-right"
+                    : isTokenMatch
+                    ? "text-right"
+                    : "text-left";
+
+                  return (
+                    <div
+                      key={message.userId}
+                      className={`my-3 ${messagePositionClass}`}
+                    >
+                      <div
+                        className={`flex flex-col ${
+                          isCurrentUser ? "items-end" : "items-start"
+                        }`}
+                      >
+                        <p
+                          className={`text-xs pb-1 ${
+                            isCurrentUser ? "text-right" : "text-left"
+                          }`}
+                        >
+                          {isCurrentUser ? "You" : message.senderName}
+                        </p>
+                        <div className="bg-white w-auto py-1 px-3 rounded max-w-[65%] break-all">
+                          <p className="text-left">
+                            {message.content}
+                            <sub className="ml-2 text-gray-500 text-[10px]">
+                              {new Date(message.timestamp)
+                                .toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                })
+                                .replace(/^00/, "12")}
+                            </sub>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+            </>
           )}
         </div>
 
@@ -101,4 +175,3 @@ const PersonalInboxChat = () => {
 };
 
 export default PersonalInboxChat;
-

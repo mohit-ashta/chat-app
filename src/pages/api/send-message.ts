@@ -19,7 +19,7 @@ export const sendMessageMutation = async (
 ): Promise<void> => {
   const messagesRef = ref(
     database,
-    `room1/message/${userId}/${name}/${senderId}`
+    `room1/messages/${userId}/${name}/${senderId}`
   );
   const message: Message = {
     userId,

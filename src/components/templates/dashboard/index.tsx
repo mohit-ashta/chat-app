@@ -26,7 +26,7 @@ export const DashboardTemplate = () => {
   if (typeof window !== "undefined") {
     jwtToken = localStorage.getItem("clerk-db-jwt");
   } else {
-    console.log("Cannot access localStorage on the server side.");
+    console.log("Cannot access localStorage on the server side. token console");
   }
 
   useEffect(() => {
@@ -104,6 +104,7 @@ export const DashboardTemplate = () => {
                 .sort((a, b) => a.timestamp - b.timestamp)
                 .map((message) => {
                   const isCurrentUser = message.userId === userId;
+                  console.log(isCurrentUser, "isCurrentUser");
                   const isTokenMatch =
                     jwtToken && message.userId === clerkUserData.id;
 
